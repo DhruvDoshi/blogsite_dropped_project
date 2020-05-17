@@ -1,26 +1,23 @@
-const express = require("express")
+const express = require('express')
+const mongoose = require('mongoose')
+const Article = require('./models/article')
 const articleRouter = require('./routes/articles')
+const methodOverride = require('method-override')
 const app = express()
 
-//setting up view engine -- coverrt ejs code to html
-app.set('view engine', 'ejs')
-
-app.use('/articles', articleRouter)
-
-app.get('/', (req, res) => {
-    const articles = [{
-        tittle: "Text Article",
-        createdAt: new Date(),
-        description: 'Test Description'
-    },
-    {
-        tittle: "Text Article 2",
-        createdAt: new Date(),
-        description: 'Test Description 2'
-    }]
-    res.render('articles/index.ejs', { articles: articles})
+mongoose.connect('mongodb://localhost/blog', {
+  useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true
 })
 
+app.set('view engine', 'ejs')
+app.use(express.urlencoded({ extended: false }))
+app.use(methodOverride('_method'))
 
+app.get('/', async (req, res) => {
+  const articles = await Article.find().sort({ createdAt: 'desc' })
+  res.render('articles/index', { articles: articles })
+})
+
+app.use('/articles', articleRouter)
 
 app.listen(5000)
